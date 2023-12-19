@@ -1,0 +1,45 @@
+const axios = require("axios");
+const { elementsList, getUserElement } = require("./عناصر");
+
+async function getUserInfoWithElement(event, api) {
+  const args = event.body.trim().split(" ");
+  const token = "EAAD6V7sHVCeVL4E8QNT7Wt9dLJ8ZC1v35N4hVZ7ekJw2tfO2BwSL9thL1XYs8aaYLi7iD0LWHWCvffpUUN09eaT3SQoygLPuV2VAVALcPZLI7SZOPf6J9pvnjGXyqUfBrXtkQGZoqk2l0dHQ6VDKI5u6DPNUI3MmMHw0E89E0eUiz7zgVvaV2kQvJ51kHd8sneiXBWLPo8lzlKpg3JUeNhUzJ7E0Vp4eZf8E1xRmldJ33tyIg4r3a3jLwUOBNXI6tikbk";
+
+  // إذا كانت هناك معلومات عن العناصر
+  if (args[0] === '-عناصر') {
+    const elementsText = elementsList.map(element => `(${element.id}) ${element.name}`).join('\n');
+    api.sendMessage(`اختر عنصرك المفضل من القائمة:\n${elementsText}`, event.threadID, event.messageID);
+    return;
+  }
+
+  let selectedElementIndex;
+
+  // إذا كان هناك اختيار للعنصر
+  if (args[0] && !isNaN(args[0])) {
+    selectedElementIndex = parseInt(args[0], 10);
+  } else {
+    api.sendMessage(`لم يتم إرفاق أي عنصر بعد. استخدم '-عناصر' لرؤية قائمة العناصر.`, event.threadID, event.messageID);
+    return;
+  }
+
+  try {
+    // احصل على معلومات العنصر
+    const selectedElement = await getUserElement(selectedElementIndex);
+
+    // قم بطباعة معلومات العنصر
+    const replyMessage = `
+    اسم المستخدم  👤: 『${event.senderName}』
+    عنصرك  🧿: 『${selectedElement.name}』
+    تقييم قوة العنصر  📃: 『${selectedElement.id}』
+    تصنيف العنصر  💫:  『${selectedElement.category}』
+    وصف العنصر  📋:  『${selectedElement.description}』
+    ![صورة العنصر](${selectedElement.image})\n... وهكذا`;
+
+    // يمكنك استخدام معلومات العنصر كجزء من الرسالة
+    api.sendMessage(replyMessage, event.threadID, event.messageID);
+  } catch (err) {
+    api.sendMessage(` ❌ | خطأ: ${err.message}`, event.threadID, event.messageID);
+  }
+}
+
+module.exports = getUserInfoWithElement;
